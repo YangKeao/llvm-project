@@ -8,6 +8,7 @@ define i32 @foo() local_unnamed_addr #0 {
 ; CHECK-LABEL: foo:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:  subq	$280, %rsp # imm = 0x118
+; CHECK-NEXT:  .cfi_adjust_cfa_offset 280
 ; CHECK-NEXT:  .cfi_def_cfa_offset 288
 ; CHECK-NEXT:  movl	$1, 264(%rsp)
 ; CHECK-NEXT:  movl	-128(%rsp), %eax

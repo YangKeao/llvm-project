@@ -56,11 +56,11 @@ define i32 @foo_protect() local_unnamed_addr #0 {
 ; CHECK-NEXT:	movq	$0, (%rsp)
 ; CHECK-NEXT:.LBB1_4:
 ; CHECK-NEXT:	movq	%rsp, %r11
-; CHECK-NEXT:	subq	$65536, %r11                    # imm = 0x10000
+; CHECK-NEXT:	subq	$65536, %rsp                    # imm = 0x10000
 ; CHECK-NEXT:.LBB1_5:                                # =>This Inner Loop Header: Depth=1
-; CHECK-NEXT:	subq	$4096, %rsp                     # imm = 0x1000
-; CHECK-NEXT:	movq	$0, (%rsp)
-; CHECK-NEXT:	cmpq	%r11, %rsp
+; CHECK-NEXT:	subq	$4096, %r11                     # imm = 0x1000
+; CHECK-NEXT:	movq	$0, (%r11)
+; CHECK-NEXT:	cmpq	%rsp, %r11
 ; CHECK-NEXT:	jne	.LBB1_5
 ; CHECK-NEXT:# %bb.6:
 ; CHECK-NEXT:	movl	$1, 392(%rsp)

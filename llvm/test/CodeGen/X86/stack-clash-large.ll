@@ -17,14 +17,16 @@ attributes #0 =  {"probe-stack"="inline-asm"}
 ; CHECK-X86-64-LABEL: foo:
 ; CHECK-X86-64:        # %bb.0:
 ; CHECK-X86-64-NEXT:	movq	%rsp, %r11
-; CHECK-X86-64-NEXT:	subq	$69632, %r11 # imm = 0x11000
+; CHECK-X86-64-NEXT:	subq	$69632, %rsp # imm = 0x11000
+; CHECK-X86-64-NEXT:	.cfi_adjust_cfa_offset 69632
 ; CHECK-X86-64-NEXT:   .LBB0_1:
-; CHECK-X86-64-NEXT:	subq	$4096, %rsp # imm = 0x1000
-; CHECK-X86-64-NEXT:	movq	$0, (%rsp)
-; CHECK-X86-64-NEXT:	cmpq	%r11, %rsp
+; CHECK-X86-64-NEXT:	subq	$4096, %r11 # imm = 0x1000
+; CHECK-X86-64-NEXT:	movq	$0, (%r11)
+; CHECK-X86-64-NEXT:	cmpq	%rsp, %r11
 ; CHECK-X86-64-NEXT:	jne	.LBB0_1
 ; CHECK-X86-64-NEXT:# %bb.2:
 ; CHECK-X86-64-NEXT:	subq    $2248, %rsp
+; CHECK-X86-64-NEXT:	.cfi_adjust_cfa_offset 2248
 ; CHECK-X86-64-NEXT:	.cfi_def_cfa_offset 71888
 ; CHECK-X86-64-NEXT:	movl	$1, 264(%rsp)
 ; CHECK-X86-64-NEXT:	movl	$1, 28664(%rsp)
@@ -36,14 +38,16 @@ attributes #0 =  {"probe-stack"="inline-asm"}
 ; CHECK-X86-32-LABEL: foo:
 ; CHECK-X86-32:      # %bb.0:
 ; CHECK-X86-32-NEXT:    movl    %esp, %r11d
-; CHECK-X86-32-NEXT:    subl    $69632, %r11d # imm = 0x11000
+; CHECK-X86-32-NEXT:    subl    $69632, %esp # imm = 0x11000
+; CHECK-X86-32-NEXT:    .cfi_adjust_cfa_offset 69632
 ; CHECK-X86-32-NEXT:    .LBB0_1: # =>This Inner Loop Header: Depth=1
-; CHECK-X86-32-NEXT:    subl    $4096, %esp # imm = 0x1000
-; CHECK-X86-32-NEXT:    movl    $0, (%esp)
-; CHECK-X86-32-NEXT:    cmpl    %r11d, %esp
+; CHECK-X86-32-NEXT:    subl    $4096, %r11d # imm = 0x1000
+; CHECK-X86-32-NEXT:    movl    $0, (%r11d)
+; CHECK-X86-32-NEXT:    cmpl    %esp, %r11d
 ; CHECK-X86-32-NEXT:    jne  .LBB0_1
 ; CHECK-X86-32-NEXT:# %bb.2:
 ; CHECK-X86-32-NEXT:    subl    $2380, %esp
+; CHECK-X86-32-NEXT:    .cfi_adjust_cfa_offset 2380
 ; CHECK-X86-32-NEXT:    .cfi_def_cfa_offset 72016
 ; CHECK-X86-32-NEXT:    movl    $1, 392(%esp)
 ; CHECK-X86-32-NEXT:    movl    $1, 28792(%esp)

@@ -14,8 +14,10 @@ attributes #0 =  {"probe-stack"="inline-asm"}
 ; CHECK-X86-64-LABEL: foo:
 ; CHECK-X86-64:      # %bb.0:
 ; CHECK-X86-64-NEXT: subq	$4096, %rsp             # imm = 0x1000
+; CHECK-X86-64-NEXT: .cfi_adjust_cfa_offset 4096
 ; CHECK-X86-64-NEXT: movq	$0, (%rsp)
 ; CHECK-X86-64-NEXT: subq	$3784, %rsp             # imm = 0xEC8
+; CHECK-X86-64-NEXT: .cfi_adjust_cfa_offset 3784
 ; CHECK-X86-64-NEXT: .cfi_def_cfa_offset 7888
 ; CHECK-X86-64-NEXT: movl	$1, 672(%rsp)
 ; CHECK-X86-64-NEXT: movl	-128(%rsp), %eax
@@ -27,8 +29,10 @@ attributes #0 =  {"probe-stack"="inline-asm"}
 ; CHECK-X86-32-LABEL: foo:
 ; CHECK-X86-32:      # %bb.0:
 ; CHECK-X86-32-NEXT: subl	$4096, %esp # imm = 0x1000
+; CHECK-X86-32-NEXT: .cfi_adjust_cfa_offset 4096
 ; CHECK-X86-32-NEXT: movl	$0, (%esp)
 ; CHECK-X86-32-NEXT: subl	$3916, %esp # imm = 0xF4C
+; CHECK-X86-32-NEXT: .cfi_adjust_cfa_offset 3916
 ; CHECK-X86-32-NEXT: .cfi_def_cfa_offset 8016
 ; CHECK-X86-32-NEXT: movl	$1, 800(%esp)
 ; CHECK-X86-32-NEXT: movl	(%esp), %eax
