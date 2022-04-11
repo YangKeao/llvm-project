@@ -198,11 +198,26 @@ struct DOTGraphTraits<ScopDetectionWrapperPass *>
 } // end namespace llvm
 
 struct ScopViewer
-    : public DOTGraphTraitsViewer<ScopDetectionWrapperPass, false> {
+    : public FunctionPass {
   static char ID;
-  ScopViewer()
-      : DOTGraphTraitsViewer<ScopDetectionWrapperPass, false>("scops", ID) {}
-  bool processFunction(Function &F, ScopDetectionWrapperPass &SD) override {
+  ScopViewer() : FunctionPass(ID) {}
+    
+  bool runOnFunction(Function &F) override {
+    auto &Analysis = getAnalysis<ScopDetectionWrapperPass>();
+
+    if (!processFunction(F, Analysis))
+      return false;
+
+    ScopDetectionWrapperPass* Graph = &Analysis;
+    std::string GraphName = DOTGraphTraits<ScopDetectionWrapperPass*>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    ViewGraph(Graph, "scops", false, Title);
+
+    return false;
+  }
+
+  bool processFunction(Function &F, ScopDetectionWrapperPass &SD) {
     if (ViewFilter != "" && !F.getName().count(ViewFilter))
       return false;
 
@@ -216,26 +231,75 @@ struct ScopViewer
 char ScopViewer::ID = 0;
 
 struct ScopOnlyViewer
-    : public DOTGraphTraitsViewer<ScopDetectionWrapperPass, true> {
+  : public FunctionPass {
   static char ID;
-  ScopOnlyViewer()
-      : DOTGraphTraitsViewer<ScopDetectionWrapperPass, true>("scopsonly", ID) {}
+  ScopOnlyViewer(): FunctionPass(ID) {}
+
+  bool runOnFunction(Function &F) override {
+    auto &Analysis = getAnalysis<ScopDetectionWrapperPass>();
+
+    ScopDetectionWrapperPass* Graph = &Analysis;
+    std::string GraphName = DOTGraphTraits<ScopDetectionWrapperPass*>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    ViewGraph(Graph, "scopsonly", true, Title);
+
+    return false;
+  }
 };
 char ScopOnlyViewer::ID = 0;
 
-struct ScopPrinter
-    : public DOTGraphTraitsPrinter<ScopDetectionWrapperPass, false> {
+struct ScopPrinter: public FunctionPass{
   static char ID;
-  ScopPrinter()
-      : DOTGraphTraitsPrinter<ScopDetectionWrapperPass, false>("scops", ID) {}
+  ScopPrinter(): FunctionPass(ID) {}
+
+  bool runOnFunction(Function &F) override {
+    auto &Analysis = getAnalysis<ScopDetectionWrapperPass>();
+
+    ScopDetectionWrapperPass* Graph = &Analysis;
+    std::string Filename = "scops." + F.getName().str() + ".dot";
+    std::error_code EC;
+
+    errs() << "Writing '" << Filename << "'...";
+
+    raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
+    std::string GraphName = DOTGraphTraits<ScopDetectionWrapperPass*>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    if (!EC)
+      WriteGraph(File, Graph, false, Title);
+    else
+      errs() << "  error opening file for writing!";
+    errs() << "\n";
+
+    return false;
+  }
 };
 char ScopPrinter::ID = 0;
 
-struct ScopOnlyPrinter
-    : public DOTGraphTraitsPrinter<ScopDetectionWrapperPass, true> {
+struct ScopOnlyPrinter: public FunctionPass{
   static char ID;
-  ScopOnlyPrinter()
-      : DOTGraphTraitsPrinter<ScopDetectionWrapperPass, true>("scopsonly", ID) {
+  ScopOnlyPrinter(): FunctionPass(ID) {}
+  bool runOnFunction(Function &F) override {
+    auto &Analysis = getAnalysis<ScopDetectionWrapperPass>();
+
+    ScopDetectionWrapperPass* Graph = &Analysis;
+    std::string Filename = "scopsonly." + F.getName().str() + ".dot";
+    std::error_code EC;
+
+    errs() << "Writing '" << Filename << "'...";
+
+    raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
+    std::string GraphName = DOTGraphTraits<ScopDetectionWrapperPass*>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    if (!EC)
+      WriteGraph(File, Graph, false, Title);
+    else
+      errs() << "  error opening file for writing!";
+    errs() << "\n";
+
+    return false;
   }
 };
 char ScopOnlyPrinter::ID = 0;
