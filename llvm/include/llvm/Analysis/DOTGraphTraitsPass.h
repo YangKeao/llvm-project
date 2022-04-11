@@ -21,18 +21,108 @@ namespace llvm {
 
 /// Default traits class for extracting a graph from an analysis pass.
 ///
+/// This assumes that 'GraphT' is 'AnalysisT::Result *', and get it through FunctionAnalysisManager.
+template <typename Result, typename GraphT = Result &>
+struct DefaultAnalysisGraphTraits {
+  static GraphT getGraph(Result &R) { return R; }
+};
+
+template <
+    typename AnalysisT, bool IsSimple, typename GraphT = typename AnalysisT::Result &,
+    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<typename AnalysisT::Result, GraphT> >
+class DOTGraphTraitsViewer : public PassInfoMixin<DOTGraphTraitsViewer<AnalysisT, IsSimple, GraphT, AnalysisGraphTraitsT>> {
+public:
+  DOTGraphTraitsViewer(StringRef GraphName)
+      : Name(GraphName) {}
+
+  /// Return true if this function should be processed.
+  ///
+  /// An implementation of this class my override this function to indicate that
+  /// only certain functions should be viewed.
+  ///
+  /// @param Result The current analysis result for this function.
+  virtual bool processFunction(Function &F, const typename AnalysisT::Result &Result) {
+    return true;
+  }
+
+  PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM) {
+    auto &Result = FAM.getResult<AnalysisT>(F);
+    if (!processFunction(F, Result))
+      return PreservedAnalyses::all();
+
+    GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
+    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    ViewGraph(Graph, Name, IsSimple, Title);
+
+    return PreservedAnalyses::all();
+  };
+
+private:
+  std::string Name;
+};
+
+template <
+    typename AnalysisT, bool IsSimple, typename GraphT = typename AnalysisT::Result &,
+    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<typename AnalysisT::Result, GraphT> >
+class DOTGraphTraitsPrinter : public PassInfoMixin<DOTGraphTraitsPrinter<AnalysisT, IsSimple, GraphT, AnalysisGraphTraitsT>> {
+public:
+  DOTGraphTraitsPrinter(StringRef GraphName)
+      : Name(GraphName) {}
+
+  /// Return true if this function should be processed.
+  ///
+  /// An implementation of this class my override this function to indicate that
+  /// only certain functions should be viewed.
+  ///
+  /// @param Analysis The current analysis result for this function.
+  virtual bool processFunction(llvm::Function &F, const typename AnalysisT::Result &Result) {
+    return true;
+  }
+
+  PreservedAnalyses run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM) {
+    auto &Result = FAM.getResult<AnalysisT>(F);
+    if (!processFunction(F, Result))
+      return PreservedAnalyses::all();
+
+    GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
+    std::string Filename = Name + "." + F.getName().str() + ".dot";
+    std::error_code EC;
+
+    errs() << "Writing '" << Filename << "'...";
+
+    raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
+    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
+    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
+
+    if (!EC)
+      WriteGraph(File, Graph, IsSimple, Title);
+    else
+      errs() << "  error opening file for writing!";
+    errs() << "\n";
+
+    return PreservedAnalyses::all();
+  };
+
+private:
+  std::string Name;
+};
+
+/// Default traits class for extracting a graph from an analysis pass.
+///
 /// This assumes that 'GraphT' is 'AnalysisT *' and so just passes it through.
 template <typename AnalysisT, typename GraphT = AnalysisT *>
-struct DefaultAnalysisGraphTraits {
+struct LegacyDefaultAnalysisGraphTraits {
   static GraphT getGraph(AnalysisT *A) { return A; }
 };
 
 template <
     typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
-    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<AnalysisT, GraphT> >
-class DOTGraphTraitsViewer : public FunctionPass {
+    typename AnalysisGraphTraitsT = LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT> >
+class LegacyDOTGraphTraitsViewer : public FunctionPass {
 public:
-  DOTGraphTraitsViewer(StringRef GraphName, char &ID)
+  LegacyDOTGraphTraitsViewer(StringRef GraphName, char &ID)
       : FunctionPass(ID), Name(GraphName) {}
 
   /// Return true if this function should be processed.
@@ -71,10 +161,10 @@ private:
 
 template <
     typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
-    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<AnalysisT, GraphT> >
-class DOTGraphTraitsPrinter : public FunctionPass {
+    typename AnalysisGraphTraitsT = LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT> >
+class LegacyDOTGraphTraitsPrinter : public FunctionPass {
 public:
-  DOTGraphTraitsPrinter(StringRef GraphName, char &ID)
+  LegacyDOTGraphTraitsPrinter(StringRef GraphName, char &ID)
       : FunctionPass(ID), Name(GraphName) {}
 
   /// Return true if this function should be processed.
@@ -123,7 +213,7 @@ private:
 
 template <
     typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
-    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<AnalysisT, GraphT> >
+    typename AnalysisGraphTraitsT = LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT> >
 class DOTGraphTraitsModuleViewer : public ModulePass {
 public:
   DOTGraphTraitsModuleViewer(StringRef GraphName, char &ID)
@@ -149,7 +239,7 @@ private:
 
 template <
     typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
-    typename AnalysisGraphTraitsT = DefaultAnalysisGraphTraits<AnalysisT, GraphT> >
+    typename AnalysisGraphTraitsT = LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT> >
 class DOTGraphTraitsModulePrinter : public ModulePass {
 public:
   DOTGraphTraitsModulePrinter(StringRef GraphName, char &ID)

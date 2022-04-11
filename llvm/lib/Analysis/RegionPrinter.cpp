@@ -145,11 +145,11 @@ struct RegionInfoPassGraphTraits {
 };
 
 struct RegionPrinter
-    : public DOTGraphTraitsPrinter<RegionInfoPass, false, RegionInfo *,
+    : public LegacyDOTGraphTraitsPrinter<RegionInfoPass, false, RegionInfo *,
                                    RegionInfoPassGraphTraits> {
   static char ID;
   RegionPrinter()
-      : DOTGraphTraitsPrinter<RegionInfoPass, false, RegionInfo *,
+      : LegacyDOTGraphTraitsPrinter<RegionInfoPass, false, RegionInfo *,
                               RegionInfoPassGraphTraits>("reg", ID) {
     initializeRegionPrinterPass(*PassRegistry::getPassRegistry());
   }
@@ -157,11 +157,11 @@ struct RegionPrinter
 char RegionPrinter::ID = 0;
 
 struct RegionOnlyPrinter
-    : public DOTGraphTraitsPrinter<RegionInfoPass, true, RegionInfo *,
+    : public LegacyDOTGraphTraitsPrinter<RegionInfoPass, true, RegionInfo *,
                                    RegionInfoPassGraphTraits> {
   static char ID;
   RegionOnlyPrinter()
-      : DOTGraphTraitsPrinter<RegionInfoPass, true, RegionInfo *,
+      : LegacyDOTGraphTraitsPrinter<RegionInfoPass, true, RegionInfo *,
                               RegionInfoPassGraphTraits>("reg", ID) {
     initializeRegionOnlyPrinterPass(*PassRegistry::getPassRegistry());
   }
@@ -169,11 +169,11 @@ struct RegionOnlyPrinter
 char RegionOnlyPrinter::ID = 0;
 
 struct RegionViewer
-    : public DOTGraphTraitsViewer<RegionInfoPass, false, RegionInfo *,
+    : public LegacyDOTGraphTraitsViewer<RegionInfoPass, false, RegionInfo *,
                                   RegionInfoPassGraphTraits> {
   static char ID;
   RegionViewer()
-      : DOTGraphTraitsViewer<RegionInfoPass, false, RegionInfo *,
+      : LegacyDOTGraphTraitsViewer<RegionInfoPass, false, RegionInfo *,
                              RegionInfoPassGraphTraits>("reg", ID) {
     initializeRegionViewerPass(*PassRegistry::getPassRegistry());
   }
@@ -181,11 +181,11 @@ struct RegionViewer
 char RegionViewer::ID = 0;
 
 struct RegionOnlyViewer
-    : public DOTGraphTraitsViewer<RegionInfoPass, true, RegionInfo *,
+    : public LegacyDOTGraphTraitsViewer<RegionInfoPass, true, RegionInfo *,
                                   RegionInfoPassGraphTraits> {
   static char ID;
   RegionOnlyViewer()
-      : DOTGraphTraitsViewer<RegionInfoPass, true, RegionInfo *,
+      : LegacyDOTGraphTraitsViewer<RegionInfoPass, true, RegionInfo *,
                              RegionInfoPassGraphTraits>("regonly", ID) {
     initializeRegionOnlyViewerPass(*PassRegistry::getPassRegistry());
   }
