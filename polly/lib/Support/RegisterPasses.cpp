@@ -331,6 +331,14 @@ static void registerPollyPasses(llvm::legacy::PassManagerBase &PM,
   if (PollyDetectOnly)
     return;
 
+  if (PollyViewer)
+    PM.add(polly::createDOTViewerWrapperPass());
+  if (PollyOnlyViewer)
+    PM.add(polly::createDOTOnlyViewerWrapperPass());
+  if (PollyPrinter)
+    PM.add(polly::createDOTPrinterWrapperPass());
+  if (PollyOnlyPrinter)
+    PM.add(polly::createDOTOnlyPrinterWrapperPass());
   PM.add(polly::createScopInfoRegionPassPass());
   if (EnablePolyhedralInfo)
     PM.add(polly::createPolyhedralInfoPass());

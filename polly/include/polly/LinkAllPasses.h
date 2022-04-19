@@ -35,6 +35,10 @@ llvm::Pass *createDependenceInfoPrinterLegacyPass(llvm::raw_ostream &OS);
 llvm::Pass *createDependenceInfoWrapperPassPass();
 llvm::Pass *
 createDependenceInfoPrinterLegacyFunctionPass(llvm::raw_ostream &OS);
+llvm::Pass *createDOTOnlyPrinterWrapperPass();
+llvm::Pass *createDOTOnlyViewerWrapperPass();
+llvm::Pass *createDOTPrinterWrapperPass();
+llvm::Pass *createDOTViewerWrapperPass();
 llvm::Pass *createJSONExporterPass();
 llvm::Pass *createJSONImporterPass();
 llvm::Pass *createJSONImporterPrinterLegacyPass(llvm::raw_ostream &OS);
@@ -90,6 +94,10 @@ struct PollyForcePassLinking {
     polly::createDependenceInfoPrinterLegacyPass(llvm::outs());
     polly::createDependenceInfoWrapperPassPass();
     polly::createDependenceInfoPrinterLegacyFunctionPass(llvm::outs());
+    polly::createDOTOnlyPrinterWrapperPass();
+    polly::createDOTOnlyViewerWrapperPass();
+    polly::createDOTPrinterWrapperPass();
+    polly::createDOTViewerWrapperPass();
     polly::createJSONExporterPass();
     polly::createJSONImporterPass();
     polly::createJSONImporterPrinterLegacyPass(llvm::outs());
