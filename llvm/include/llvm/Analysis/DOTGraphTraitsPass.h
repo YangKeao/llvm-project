@@ -28,6 +28,15 @@ struct DefaultAnalysisGraphTraits {
   static GraphT getGraph(Result &R) { return R; }
 };
 
+
+template<typename GraphT>
+static void runViewerImpl(Function &F, GraphT &Graph, StringRef Name, bool IsSimple) {
+  std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
+  Twine Title = GraphName + " for '" + F.getName() + "' function";
+
+  ViewGraph(Graph, Name, IsSimple, Title);
+}
+
 template <typename AnalysisT, bool IsSimple,
           typename GraphT = typename AnalysisT::Result &,
           typename AnalysisGraphTraitsT =
@@ -54,10 +63,7 @@ struct DOTGraphTraitsViewer
       return PreservedAnalyses::all();
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
-    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
-    Twine Title = GraphName + " for '" + F.getName() + "' function";
-
-    ViewGraph(Graph, Name, IsSimple, Title);
+    runViewerImpl(F, Graph, Name, IsSimple);
 
     return PreservedAnalyses::all();
   };
@@ -65,6 +71,24 @@ struct DOTGraphTraitsViewer
 private:
   StringRef Name;
 };
+
+template<typename GraphT>
+static void runPrinterImpl(Function &F, GraphT &Graph, StringRef Name, bool IsSimple) {
+  Twine Filename = Name + "." + F.getName() + ".dot";
+  std::error_code EC;
+
+  errs() << "Writing '" << Filename << "'...";
+
+  raw_fd_ostream File(Filename.str(), EC, sys::fs::OF_TextWithCRLF);
+  std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
+  Twine Title = GraphName + " for '" + F.getName() + "' function";
+
+  if (!EC)
+    WriteGraph(File, Graph, IsSimple, Title);
+  else
+    errs() << "  error opening file for writing!";
+  errs() << "\n";
+}
 
 template <typename AnalysisT, bool IsSimple,
           typename GraphT = typename AnalysisT::Result &,
@@ -92,20 +116,8 @@ struct DOTGraphTraitsPrinter
       return PreservedAnalyses::all();
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
-    Twine Filename = Name + "." + F.getName() + ".dot";
-    std::error_code EC;
 
-    errs() << "Writing '" << Filename << "'...";
-
-    raw_fd_ostream File(Filename.str(), EC, sys::fs::OF_TextWithCRLF);
-    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
-    Twine Title = GraphName + " for '" + F.getName() + "' function";
-
-    if (!EC)
-      WriteGraph(File, Graph, IsSimple, Title);
-    else
-      errs() << "  error opening file for writing!";
-    errs() << "\n";
+    runPrinterImpl(F, Graph, Name, IsSimple);
 
     return PreservedAnalyses::all();
   };
@@ -147,10 +159,7 @@ public:
       return false;
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(&Analysis);
-    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
-    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
-
-    ViewGraph(Graph, Name, IsSimple, Title);
+    runViewerImpl(F, Graph, Name, IsSimple);
 
     return false;
   }
@@ -189,20 +198,7 @@ public:
       return false;
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(&Analysis);
-    std::string Filename = Name + "." + F.getName().str() + ".dot";
-    std::error_code EC;
-
-    errs() << "Writing '" << Filename << "'...";
-
-    raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
-    std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
-    std::string Title = GraphName + " for '" + F.getName().str() + "' function";
-
-    if (!EC)
-      WriteGraph(File, Graph, IsSimple, Title);
-    else
-      errs() << "  error opening file for writing!";
-    errs() << "\n";
+    runPrinterImpl(F, Graph, Name, IsSimple);
 
     return false;
   }
