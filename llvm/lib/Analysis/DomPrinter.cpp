@@ -116,12 +116,12 @@ struct DominatorTreeWrapperPassAnalysisGraphTraits {
   }
 };
 
-struct DomViewer : public LegacyDOTGraphTraitsViewer<
+struct DomViewer : public DOTGraphTraitsViewerWrapperPass<
                        DominatorTreeWrapperPass, false, DominatorTree *,
                        DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomViewer()
-      : LegacyDOTGraphTraitsViewer<DominatorTreeWrapperPass, false,
+      : DOTGraphTraitsViewerWrapperPass<DominatorTreeWrapperPass, false,
                                    DominatorTree *,
                                    DominatorTreeWrapperPassAnalysisGraphTraits>(
             "dom", ID) {
@@ -129,12 +129,12 @@ struct DomViewer : public LegacyDOTGraphTraitsViewer<
   }
 };
 
-struct DomOnlyViewer : public LegacyDOTGraphTraitsViewer<
+struct DomOnlyViewer : public DOTGraphTraitsViewerWrapperPass<
                            DominatorTreeWrapperPass, true, DominatorTree *,
                            DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomOnlyViewer()
-      : LegacyDOTGraphTraitsViewer<DominatorTreeWrapperPass, true,
+      : DOTGraphTraitsViewerWrapperPass<DominatorTreeWrapperPass, true,
                                    DominatorTree *,
                                    DominatorTreeWrapperPassAnalysisGraphTraits>(
             "domonly", ID) {
@@ -149,12 +149,12 @@ struct PostDominatorTreeWrapperPassAnalysisGraphTraits {
 };
 
 struct PostDomViewer
-    : public LegacyDOTGraphTraitsViewer<
+    : public DOTGraphTraitsViewerWrapperPass<
           PostDominatorTreeWrapperPass, false, PostDominatorTree *,
           PostDominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   PostDomViewer()
-      : LegacyDOTGraphTraitsViewer<
+      : DOTGraphTraitsViewerWrapperPass<
             PostDominatorTreeWrapperPass, false, PostDominatorTree *,
             PostDominatorTreeWrapperPassAnalysisGraphTraits>("postdom", ID) {
     initializePostDomViewerPass(*PassRegistry::getPassRegistry());
@@ -162,12 +162,12 @@ struct PostDomViewer
 };
 
 struct PostDomOnlyViewer
-    : public LegacyDOTGraphTraitsViewer<
+    : public DOTGraphTraitsViewerWrapperPass<
           PostDominatorTreeWrapperPass, true, PostDominatorTree *,
           PostDominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   PostDomOnlyViewer()
-      : LegacyDOTGraphTraitsViewer<
+      : DOTGraphTraitsViewerWrapperPass<
             PostDominatorTreeWrapperPass, true, PostDominatorTree *,
             PostDominatorTreeWrapperPassAnalysisGraphTraits>("postdomonly",
                                                              ID) {
@@ -196,24 +196,24 @@ INITIALIZE_PASS(PostDomOnlyViewer, "view-postdom-only",
                 false, false)
 
 namespace {
-struct DomPrinter : public LegacyDOTGraphTraitsPrinter<
+struct DomPrinter : public DOTGraphTraitsPrinterWrapperPass<
                         DominatorTreeWrapperPass, false, DominatorTree *,
                         DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomPrinter()
-      : LegacyDOTGraphTraitsPrinter<
+      : DOTGraphTraitsPrinterWrapperPass<
             DominatorTreeWrapperPass, false, DominatorTree *,
             DominatorTreeWrapperPassAnalysisGraphTraits>("dom", ID) {
     initializeDomPrinterPass(*PassRegistry::getPassRegistry());
   }
 };
 
-struct DomOnlyPrinter : public LegacyDOTGraphTraitsPrinter<
+struct DomOnlyPrinter : public DOTGraphTraitsPrinterWrapperPass<
                             DominatorTreeWrapperPass, true, DominatorTree *,
                             DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomOnlyPrinter()
-      : LegacyDOTGraphTraitsPrinter<
+      : DOTGraphTraitsPrinterWrapperPass<
             DominatorTreeWrapperPass, true, DominatorTree *,
             DominatorTreeWrapperPassAnalysisGraphTraits>("domonly", ID) {
     initializeDomOnlyPrinterPass(*PassRegistry::getPassRegistry());
@@ -221,12 +221,12 @@ struct DomOnlyPrinter : public LegacyDOTGraphTraitsPrinter<
 };
 
 struct PostDomPrinter
-    : public LegacyDOTGraphTraitsPrinter<
+    : public DOTGraphTraitsPrinterWrapperPass<
           PostDominatorTreeWrapperPass, false, PostDominatorTree *,
           PostDominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   PostDomPrinter()
-      : LegacyDOTGraphTraitsPrinter<
+      : DOTGraphTraitsPrinterWrapperPass<
             PostDominatorTreeWrapperPass, false, PostDominatorTree *,
             PostDominatorTreeWrapperPassAnalysisGraphTraits>("postdom", ID) {
     initializePostDomPrinterPass(*PassRegistry::getPassRegistry());
@@ -234,12 +234,12 @@ struct PostDomPrinter
 };
 
 struct PostDomOnlyPrinter
-    : public LegacyDOTGraphTraitsPrinter<
+    : public DOTGraphTraitsPrinterWrapperPass<
           PostDominatorTreeWrapperPass, true, PostDominatorTree *,
           PostDominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   PostDomOnlyPrinter()
-      : LegacyDOTGraphTraitsPrinter<
+      : DOTGraphTraitsPrinterWrapperPass<
             PostDominatorTreeWrapperPass, true, PostDominatorTree *,
             PostDominatorTreeWrapperPassAnalysisGraphTraits>("postdomonly",
                                                              ID) {

@@ -198,10 +198,10 @@ struct DOTGraphTraits<ScopDetectionWrapperPass *>
 } // end namespace llvm
 
 struct ScopViewer
-    : public LegacyDOTGraphTraitsViewer<ScopDetectionWrapperPass, false> {
+    : public DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false> {
   static char ID;
   ScopViewer()
-      : LegacyDOTGraphTraitsViewer<ScopDetectionWrapperPass, false>("scops",
+      : DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false>("scops",
                                                                     ID) {}
   bool processFunction(Function &F, ScopDetectionWrapperPass &SD) override {
     if (ViewFilter != "" && !F.getName().count(ViewFilter))
@@ -217,28 +217,28 @@ struct ScopViewer
 char ScopViewer::ID = 0;
 
 struct ScopOnlyViewer
-    : public LegacyDOTGraphTraitsViewer<ScopDetectionWrapperPass, true> {
+    : public DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, true> {
   static char ID;
   ScopOnlyViewer()
-      : LegacyDOTGraphTraitsViewer<ScopDetectionWrapperPass, true>("scopsonly",
+      : DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, true>("scopsonly",
                                                                    ID) {}
 };
 char ScopOnlyViewer::ID = 0;
 
 struct ScopPrinter
-    : public LegacyDOTGraphTraitsPrinter<ScopDetectionWrapperPass, false> {
+    : public DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, false> {
   static char ID;
   ScopPrinter()
-      : LegacyDOTGraphTraitsPrinter<ScopDetectionWrapperPass, false>("scops",
+      : DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, false>("scops",
                                                                      ID) {}
 };
 char ScopPrinter::ID = 0;
 
 struct ScopOnlyPrinter
-    : public LegacyDOTGraphTraitsPrinter<ScopDetectionWrapperPass, true> {
+    : public DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, true> {
   static char ID;
   ScopOnlyPrinter()
-      : LegacyDOTGraphTraitsPrinter<ScopDetectionWrapperPass, true>("scopsonly",
+      : DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, true>("scopsonly",
                                                                     ID) {}
 };
 char ScopOnlyPrinter::ID = 0;

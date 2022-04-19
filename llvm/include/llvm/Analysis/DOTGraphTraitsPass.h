@@ -125,9 +125,9 @@ struct LegacyDefaultAnalysisGraphTraits {
 template <typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
           typename AnalysisGraphTraitsT =
               LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT>>
-class LegacyDOTGraphTraitsViewer : public FunctionPass {
+class DOTGraphTraitsViewerWrapperPass : public FunctionPass {
 public:
-  LegacyDOTGraphTraitsViewer(StringRef GraphName, char &ID)
+  DOTGraphTraitsViewerWrapperPass(StringRef GraphName, char &ID)
       : FunctionPass(ID), Name(GraphName) {}
 
   /// Return true if this function should be processed.
@@ -167,9 +167,9 @@ private:
 template <typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
           typename AnalysisGraphTraitsT =
               LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT>>
-class LegacyDOTGraphTraitsPrinter : public FunctionPass {
+class DOTGraphTraitsPrinterWrapperPass : public FunctionPass {
 public:
-  LegacyDOTGraphTraitsPrinter(StringRef GraphName, char &ID)
+  DOTGraphTraitsPrinterWrapperPass(StringRef GraphName, char &ID)
       : FunctionPass(ID), Name(GraphName) {}
 
   /// Return true if this function should be processed.
@@ -219,9 +219,9 @@ private:
 template <typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
           typename AnalysisGraphTraitsT =
               LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT>>
-class LegacyDOTGraphTraitsModuleViewer : public ModulePass {
+class DOTGraphTraitsModuleViewerWrapperPass : public ModulePass {
 public:
-  LegacyDOTGraphTraitsModuleViewer(StringRef GraphName, char &ID)
+  DOTGraphTraitsModuleViewerWrapperPass(StringRef GraphName, char &ID)
       : ModulePass(ID), Name(GraphName) {}
 
   bool runOnModule(Module &M) override {
@@ -245,9 +245,9 @@ private:
 template <typename AnalysisT, bool IsSimple, typename GraphT = AnalysisT *,
           typename AnalysisGraphTraitsT =
               LegacyDefaultAnalysisGraphTraits<AnalysisT, GraphT>>
-class LegacyDOTGraphTraitsModulePrinter : public ModulePass {
+class DOTGraphTraitsModulePrinterWrapperPass : public ModulePass {
 public:
-  LegacyDOTGraphTraitsModulePrinter(StringRef GraphName, char &ID)
+  DOTGraphTraitsModulePrinterWrapperPass(StringRef GraphName, char &ID)
       : ModulePass(ID), Name(GraphName) {}
 
   bool runOnModule(Module &M) override {
