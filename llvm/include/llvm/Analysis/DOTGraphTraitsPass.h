@@ -29,7 +29,7 @@ struct DefaultAnalysisGraphTraits {
 };
 
 template <typename GraphT>
-static void runViewerImpl(Function &F, GraphT &Graph, StringRef Name,
+void viewGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                           bool IsSimple) {
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
   Twine Title = GraphName + " for '" + F.getName() + "' function";
@@ -63,7 +63,7 @@ struct DOTGraphTraitsViewer
       return PreservedAnalyses::all();
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
-    runViewerImpl(F, Graph, Name, IsSimple);
+    viewGraphForFunction(F, Graph, Name, IsSimple);
 
     return PreservedAnalyses::all();
   };
@@ -73,7 +73,7 @@ private:
 };
 
 template <typename GraphT>
-static void runPrinterImpl(Function &F, GraphT &Graph, StringRef Name,
+void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                            bool IsSimple) {
   Twine Filename = Name + "." + F.getName() + ".dot";
   std::error_code EC;
@@ -118,7 +118,7 @@ struct DOTGraphTraitsPrinter
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(Result);
 
-    runPrinterImpl(F, Graph, Name, IsSimple);
+    printGraphForFunction(F, Graph, Name, IsSimple);
 
     return PreservedAnalyses::all();
   };
@@ -160,7 +160,7 @@ public:
       return false;
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(&Analysis);
-    runViewerImpl(F, Graph, Name, IsSimple);
+    viewGraphForFunction(F, Graph, Name, IsSimple);
 
     return false;
   }
@@ -199,7 +199,7 @@ public:
       return false;
 
     GraphT Graph = AnalysisGraphTraitsT::getGraph(&Analysis);
-    runPrinterImpl(F, Graph, Name, IsSimple);
+    printGraphForFunction(F, Graph, Name, IsSimple);
 
     return false;
   }
