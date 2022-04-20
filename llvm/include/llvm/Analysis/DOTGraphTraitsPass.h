@@ -28,9 +28,9 @@ struct DefaultAnalysisGraphTraits {
   static GraphT getGraph(Result &R) { return R; }
 };
 
-
-template<typename GraphT>
-static void runViewerImpl(Function &F, GraphT &Graph, StringRef Name, bool IsSimple) {
+template <typename GraphT>
+static void runViewerImpl(Function &F, GraphT &Graph, StringRef Name,
+                          bool IsSimple) {
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
   Twine Title = GraphName + " for '" + F.getName() + "' function";
 
@@ -72,8 +72,9 @@ private:
   StringRef Name;
 };
 
-template<typename GraphT>
-static void runPrinterImpl(Function &F, GraphT &Graph, StringRef Name, bool IsSimple) {
+template <typename GraphT>
+static void runPrinterImpl(Function &F, GraphT &Graph, StringRef Name,
+                           bool IsSimple) {
   Twine Filename = Name + "." + F.getName() + ".dot";
   std::error_code EC;
 

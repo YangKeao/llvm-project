@@ -121,10 +121,9 @@ struct DomViewer : public DOTGraphTraitsViewerWrapperPass<
                        DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomViewer()
-      : DOTGraphTraitsViewerWrapperPass<DominatorTreeWrapperPass, false,
-                                   DominatorTree *,
-                                   DominatorTreeWrapperPassAnalysisGraphTraits>(
-            "dom", ID) {
+      : DOTGraphTraitsViewerWrapperPass<
+            DominatorTreeWrapperPass, false, DominatorTree *,
+            DominatorTreeWrapperPassAnalysisGraphTraits>("dom", ID) {
     initializeDomViewerPass(*PassRegistry::getPassRegistry());
   }
 };
@@ -134,10 +133,9 @@ struct DomOnlyViewer : public DOTGraphTraitsViewerWrapperPass<
                            DominatorTreeWrapperPassAnalysisGraphTraits> {
   static char ID;
   DomOnlyViewer()
-      : DOTGraphTraitsViewerWrapperPass<DominatorTreeWrapperPass, true,
-                                   DominatorTree *,
-                                   DominatorTreeWrapperPassAnalysisGraphTraits>(
-            "domonly", ID) {
+      : DOTGraphTraitsViewerWrapperPass<
+            DominatorTreeWrapperPass, true, DominatorTree *,
+            DominatorTreeWrapperPassAnalysisGraphTraits>("domonly", ID) {
     initializeDomOnlyViewerPass(*PassRegistry::getPassRegistry());
   }
 };
