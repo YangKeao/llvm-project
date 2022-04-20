@@ -82,7 +82,7 @@ void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
 
   raw_fd_ostream File(Filename.str(), EC, sys::fs::OF_TextWithCRLF);
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
-  Twine Title = GraphName + " for '" + F.getName() + "' function";
+  std::string Title = GraphName + " for '" + F.getName().str() + "' function";
 
   if (!EC)
     WriteGraph(File, Graph, IsSimple, Title);

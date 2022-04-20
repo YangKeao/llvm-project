@@ -113,6 +113,24 @@ template <> struct GraphTraits<PostDominatorTree*>
   }
 };
 
+template <> struct GraphTraits<PostDominatorTree>
+  : public GraphTraits<DomTreeNode*> {
+  static NodeRef getEntryNode(const PostDominatorTree &DT) {
+    return DT.getRootNode();
+  }
+
+  static nodes_iterator nodes_begin(const PostDominatorTree &N) {
+    if (getEntryNode(N))
+      return df_begin(getEntryNode(N));
+    else
+      return df_end(getEntryNode(N));
+  }
+
+  static nodes_iterator nodes_end(const PostDominatorTree &N) {
+    return df_end(getEntryNode(N));
+  }
+};
+
 } // end namespace llvm
 
 #endif // LLVM_ANALYSIS_POSTDOMINATORS_H

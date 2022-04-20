@@ -225,9 +225,9 @@ class DominatorTree : public DominatorTreeBase<BasicBlock, false> {
 // iterable by generic graph iterators.
 
 template <class Node, class ChildIterator> struct DomTreeGraphTraitsBase {
-  using NodeRef = Node *;
+  using NodeRef = const Node *;
   using ChildIteratorType = ChildIterator;
-  using nodes_iterator = df_iterator<Node *, df_iterator_default_set<Node*>>;
+  using nodes_iterator = df_iterator<NodeRef, df_iterator_default_set<NodeRef>>;
 
   static NodeRef getEntryNode(NodeRef N) { return N; }
   static ChildIteratorType child_begin(NodeRef N) { return N->begin(); }
@@ -259,6 +259,19 @@ template <> struct GraphTraits<DominatorTree*>
   }
 
   static nodes_iterator nodes_end(DominatorTree *N) {
+    return df_end(getEntryNode(N));
+  }
+};
+
+template <> struct GraphTraits<DominatorTree>
+  : public GraphTraits<DomTreeNode*> {
+  static NodeRef getEntryNode(const DominatorTree &DT) { return DT.getRootNode(); }
+
+  static nodes_iterator nodes_begin(const DominatorTree &N) {
+    return df_begin(getEntryNode(N));
+  }
+
+  static nodes_iterator nodes_end(const DominatorTree &N) {
     return df_end(getEntryNode(N));
   }
 };
