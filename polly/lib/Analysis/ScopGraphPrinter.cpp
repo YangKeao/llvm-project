@@ -31,21 +31,6 @@ static cl::opt<bool> ViewAll("polly-view-all",
 
 namespace llvm {
 
-std::string DOTGraphTraits<RegionNode *>::getNodeLabel(RegionNode *Node,
-                                                       RegionNode *Graph) {
-  if (!Node->isSubRegion()) {
-    BasicBlock *BB = Node->getNodeAs<BasicBlock>();
-
-    if (isSimple())
-      return DOTGraphTraits<DOTFuncInfo *>::getSimpleNodeLabel(BB, nullptr);
-
-    else
-      return DOTGraphTraits<DOTFuncInfo *>::getCompleteNodeLabel(BB, nullptr);
-  }
-
-  return "Not implemented";
-}
-
 std::string DOTGraphTraits<ScopDetection *>::getEdgeAttributes(
     RegionNode *srcNode, GraphTraits<RegionInfo *>::ChildIteratorType CI,
     ScopDetection *SD) {

@@ -41,6 +41,7 @@ struct GraphTraits<ScopDetection> : public GraphTraits<RegionInfo *> {
   }
 };
 
+// this class has been implemented in LLVM RegionPrinter.cpp
 template <> struct DOTGraphTraits<RegionNode *> : public DefaultDOTGraphTraits {
   DOTGraphTraits(bool isSimple = false) : DefaultDOTGraphTraits(isSimple) {}
 
