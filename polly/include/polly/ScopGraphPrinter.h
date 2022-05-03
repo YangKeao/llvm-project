@@ -21,6 +21,7 @@
 #include "llvm/Analysis/DOTGraphTraitsPass.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/RegionIterator.h"
+#include "llvm/Analysis/RegionPrinter.h"
 #include "llvm/IR/PassManager.h"
 
 using namespace polly;
@@ -41,36 +42,31 @@ struct GraphTraits<ScopDetection> : public GraphTraits<RegionInfo *> {
   }
 };
 
-// this class has been implemented in LLVM RegionPrinter.cpp
-template <> struct DOTGraphTraits<RegionNode *> : public DefaultDOTGraphTraits {
-  DOTGraphTraits(bool isSimple = false) : DefaultDOTGraphTraits(isSimple) {}
-
-  std::string getNodeLabel(RegionNode *Node, RegionNode *Graph);
-};
-
 template <>
-struct DOTGraphTraits<ScopDetection *> : public DOTGraphTraits<RegionNode *> {
+struct DOTGraphTraits<ScopDetection> : public DOTGraphTraits<RegionNode *> {
   DOTGraphTraits(bool isSimple = false)
       : DOTGraphTraits<RegionNode *>(isSimple) {}
-  static std::string getGraphName(ScopDetection *SD) { return "Scop Graph"; }
+  static std::string getGraphName(const ScopDetection &SD) {
+    return "Scop Graph";
+  }
 
   std::string getEdgeAttributes(RegionNode *srcNode,
                                 GraphTraits<RegionInfo *>::ChildIteratorType CI,
-                                ScopDetection *SD);
+                                const ScopDetection &SD);
 
-  std::string getNodeLabel(RegionNode *Node, ScopDetection *SD) {
+  std::string getNodeLabel(RegionNode *Node, const ScopDetection &SD) {
     return DOTGraphTraits<RegionNode *>::getNodeLabel(
-        Node, reinterpret_cast<RegionNode *>(SD->getRI()->getTopLevelRegion()));
+        Node, reinterpret_cast<RegionNode *>(SD.getRI()->getTopLevelRegion()));
   }
 
   static std::string escapeString(std::string String);
 
   // Print the cluster of the subregions. This groups the single basic blocks
   // and adds a different background color for each group.
-  static void printRegionCluster(ScopDetection *SD, const Region *R,
+  static void printRegionCluster(const ScopDetection &SD, const Region *R,
                                  raw_ostream &O, unsigned depth);
 
-  static void addCustomGraphFeatures(ScopDetection *SD,
+  static void addCustomGraphFeatures(const ScopDetection &SD,
                                      GraphWriter<ScopDetection> &GW);
 };
 } // end namespace llvm
