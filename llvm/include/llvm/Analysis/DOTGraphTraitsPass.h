@@ -74,12 +74,12 @@ private:
 template <typename GraphT>
 void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                            bool IsSimple) {
-  Twine Filename = Name + "." + F.getName() + ".dot";
+  std::string Filename = Name.str() + "." + F.getName().str() + ".dot";
   std::error_code EC;
 
   errs() << "Writing '" << Filename << "'...";
 
-  raw_fd_ostream File(Filename.str(), EC, sys::fs::OF_TextWithCRLF);
+  raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
 
   if (!EC)
