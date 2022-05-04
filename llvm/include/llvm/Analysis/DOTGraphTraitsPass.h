@@ -33,7 +33,8 @@ void viewGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                           bool IsSimple) {
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
 
-  ViewGraph(Graph, Name, IsSimple, GraphName + " for '" + F.getName() + "' function");
+  ViewGraph(Graph, Name, IsSimple,
+            GraphName + " for '" + F.getName() + "' function");
 }
 
 template <typename AnalysisT, bool IsSimple,
@@ -83,7 +84,8 @@ void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
 
   if (!EC)
-    WriteGraph(File, Graph, IsSimple, GraphName + " for '" + F.getName() + "' function");
+    WriteGraph(File, Graph, IsSimple,
+               GraphName + " for '" + F.getName() + "' function");
   else
     errs() << "  error opening file for writing!";
   errs() << "\n";
