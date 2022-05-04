@@ -73,7 +73,7 @@ std::string DOTGraphTraits<ScopDetection>::escapeString(std::string String) {
 void DOTGraphTraits<ScopDetection>::printRegionCluster(const ScopDetection &SD,
                                                        const Region *R,
                                                        raw_ostream &O,
-                                                       unsigned depth = 0) {
+                                                       unsigned depth) {
   O.indent(2 * depth) << "subgraph cluster_" << static_cast<const void *>(R)
                       << " {\n";
   unsigned LineBegin, LineEnd;

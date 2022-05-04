@@ -64,7 +64,7 @@ struct DOTGraphTraits<ScopDetection> : public DOTGraphTraits<RegionNode *> {
   // Print the cluster of the subregions. This groups the single basic blocks
   // and adds a different background color for each group.
   static void printRegionCluster(const ScopDetection &SD, const Region *R,
-                                 raw_ostream &O, unsigned depth);
+                                 raw_ostream &O, unsigned depth = 0);
 
   static void addCustomGraphFeatures(const ScopDetection &SD,
                                      GraphWriter<ScopDetection> &GW);
