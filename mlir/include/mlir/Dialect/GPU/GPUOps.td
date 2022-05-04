@@ -373,7 +373,7 @@ def GPU_LaunchFuncOp : GPU_Op<"launch_func",
 
       // This module creates a separate compilation unit for the GPU compiler.
       gpu.module @kernels {
-        func @kernel_1(%arg0 : f32, %arg1 : memref<?xf32, 1>)
+        func.func @kernel_1(%arg0 : f32, %arg1 : memref<?xf32, 1>)
             attributes { nvvm.kernel = true } {
 
           // Operations that produce block/thread IDs and dimensions are
@@ -420,7 +420,9 @@ def GPU_LaunchFuncOp : GPU_Op<"launch_func",
   let builders = [
     OpBuilder<(ins "GPUFuncOp":$kernelFunc, "KernelDim3":$gridSize,
       "KernelDim3":$blockSize, "Value":$dynamicSharedMemorySize,
-      "ValueRange":$kernelOperands)>
+      "ValueRange":$kernelOperands,
+      CArg<"Type", "nullptr">:$asyncTokenType,
+      CArg<"ValueRange", "{}">:$asyncDependencies)>
   ];
 
   let extraClassDeclaration = [{
@@ -466,25 +468,32 @@ def GPU_LaunchFuncOp : GPU_Op<"launch_func",
   let hasVerifier = 1;
 }
 
-def GPU_LaunchOp : GPU_Op<"launch", [AutomaticAllocationScope]>,
-    Arguments<(ins Index:$gridSizeX, Index:$gridSizeY, Index:$gridSizeZ,
+def GPU_LaunchOp : GPU_Op<"launch",
+    [AutomaticAllocationScope, AttrSizedOperandSegments, GPU_AsyncOpInterface]>,
+    Arguments<(ins Variadic<GPU_AsyncToken>:$asyncDependencies,
+               Index:$gridSizeX, Index:$gridSizeY, Index:$gridSizeZ,
                Index:$blockSizeX, Index:$blockSizeY, Index:$blockSizeZ,
                Optional<I32>:$dynamicSharedMemorySize)>,
-    Results<(outs)> {
+    Results<(outs Optional<GPU_AsyncToken>:$asyncToken)> {
   let summary = "GPU kernel launch operation";
 
   let description = [{
     Launch a kernel on the specified grid of thread blocks. The body of the
     kernel is defined by the single region that this operation contains. The
-    operation takes six operands followed by an optional operand: the first
-    three operands are grid sizes along the x,y,z dimensions and the following
-    three are block sizes along the x,y,z dimensions. The last operand is
-    optional and corresponds to the amount of dynamic shared memory a kernel's
-    workgroup should be allocated; when this operand is not present, a zero size
-    is assumed.
+    operation takes an optional list of async dependencies followed by six
+    operands and an optional operand.
 
-    When a lower-dimensional kernel is required, unused sizes must
-    be explicitly set to `1`.
+    The `async` keyword indicates the kernel should be launched asynchronously;
+    the operation returns a new !gpu.async.token when the keyword is specified.
+    The kernel launched does not start executing until the ops producing its
+    async dependencies (optional operands) have completed.
+
+    The first three operands (following any async dependencies) are grid sizes
+    along the x,y,z dimensions and the following three are block sizes along the
+    x,y,z dimensions. When a lower-dimensional kernel is required, unused sizes
+    must be explicitly set to `1`.  The last operand is optional and corresponds
+    to the amount of dynamic shared memory a kernel's workgroup should be
+    allocated; when this operand is not present, a zero size is assumed.
 
     The body region has _twelve_ arguments, grouped as follows:
 
@@ -496,7 +505,8 @@ def GPU_LaunchOp : GPU_Op<"launch", [AutomaticAllocationScope]>,
     Syntax:
 
     ```
-    operation ::= `gpu.launch` `block` `(` ssa-id-list `)` `in` ssa-reassignment
+    operation ::= `gpu.launch` (`async` (`[` ssa-id-list `]`)? )?
+                             `block` `(` ssa-id-list `)` `in` ssa-reassignment
                              `threads` `(` ssa-id-list `)` `in` ssa-reassignment
                              (dynamic_shared_memory_size ssa-use)?
                              region attr-dict?
@@ -548,7 +558,9 @@ def GPU_LaunchOp : GPU_Op<"launch", [AutomaticAllocationScope]>,
     OpBuilder<(ins "Value":$gridSizeX, "Value":$gridSizeY,
       "Value":$gridSizeZ, "Value":$blockSizeX, "Value":$blockSizeY,
       "Value":$blockSizeZ,
-      CArg<"Value", "nullptr">:$dynamic_shared_memory_size)>
+      CArg<"Value", "nullptr">:$dynamicSharedMemorySize,
+      CArg<"Type", "nullptr">:$asyncTokenType,
+      CArg<"ValueRange", "{}">:$asyncDependencies)>
   ];
 
   let extraClassDeclaration = [{
@@ -1366,60 +1378,6 @@ def GPU_DeviceAsyncWaitOp : GPU_Op<"device_async_wait", []> {
                        OptionalAttr<I32Attr>:$numGroups);
   let assemblyFormat = [{
     $asyncDependencies attr-dict
-  }];
-}
-
-def GPU_MmaLdMatrixOp : GPU_Op<"mma.ldmatrix", 
-                                [MemoryEffects<[MemRead]>]> {
-  let description = [{
-  The `gpu.mma.ldmatrix` op represents loading a matrix fragment from
-  memory. The load source and result type must be compatible with lowering 
-  to the `nvvm.ldmatrix` instruction. This op is meant to represent 
-  the distributed version of a `vector.transfer_read` as an intermediate 
-  step between lowering from `vector.transfer_read` to `nvvm.ldmatrix`.
-  
-  Example:
-
-  ```mlir
-  gpu.mma.ldmatrix %shm_buffer[%c0, %c0] : memref<16x16xf16, 3> -> vector<4x2xf16>
-  ```
-  }];                                
-
-  let arguments = (ins Arg<AnyMemRef, "", [MemRead]>:$srcMemref,
-                      Variadic<Index>:$indices, BoolAttr:$transpose,
-                      I32Attr:$numTiles);
-  let results = (outs AnyVector:$res);
-  let assemblyFormat = [{
-    $srcMemref`[` $indices `]` attr-dict `:` type($srcMemref) `->` type($res)
-  }];                      
-}
-
-def GPU_MmaSyncOp : GPU_Op<"mma.sync", [NoSideEffect]> {
-  let description = [{
-  The `gpu.mma.sync` op represents the distributed form of a collective
-  matrix-multiply-and-accumulate (mma) operation that is compatible with
-  `nvvm.mma.sync`. The operands and results are fragments of the full matrix 
-  operands. The full shape of the distributed mma operation is given by the
-  `mmaShape` attribute in the form of a list of dimensions `[m, n, k]`.  
-
-  This operation is meant to be lowered to the `nvvm.mma.sync` instruction, and
-  is an intermediate point between lowering from `vector.contract` to
-  `nvvm.mma.sync`.
-  
-  Example:
-
-  ```mlir
-  gpu.mma.sync (%a, %b, %c) : (vector<4x2xf16>, vector<2x2xf16>, vector<2x2xf16>) -> vector<2x2xf16>
-  ```
-  }];   
-  let arguments = (ins AnyVector:$matrixA, AnyVector:$matrixB, AnyVector:$matrixC,
-    I64ArrayAttr:$mmaShape);
-
-  let results = (outs AnyVector:$res);
-
-  let assemblyFormat = [{
-    `(` $matrixA`,` $matrixB`,` $matrixC `)` attr-dict
-    `:` `(` type($matrixA) `,` type($matrixB) `,` type($matrixC) `)` `->` type($res)
   }];
 }
 

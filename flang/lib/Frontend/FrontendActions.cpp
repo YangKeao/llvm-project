@@ -30,6 +30,7 @@
 #include "mlir/IR/Dialect.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Target/LLVMIR/ModuleTranslation.h"
+#include "clang/Basic/DiagnosticFrontend.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -427,6 +428,7 @@ void CodeGenAction::GenerateLLVMIR() {
 
   // Create the pass pipeline
   fir::createMLIRToLLVMPassPipeline(pm);
+  mlir::applyPassManagerCLOptions(pm);
 
   // Run the pass manager
   if (!mlir::succeeded(pm.run(*mlirModule))) {
@@ -480,9 +482,15 @@ void EmitLLVMBitcodeAction::ExecuteAction() {
   if (!llvmModule)
     GenerateLLVMIR();
 
-  // Create and configure `Target`
+  // Set the triple based on the CompilerInvocation set-up
+  const std::string &theTriple = ci.invocation().targetOpts().triple;
+  if (llvmModule->getTargetTriple() != theTriple) {
+    ci.diagnostics().Report(clang::diag::warn_fe_override_module) << theTriple;
+    llvmModule->setTargetTriple(theTriple);
+  }
+
+  // Create `Target`
   std::string error;
-  std::string theTriple = llvmModule->getTargetTriple();
   const llvm::Target *theTarget =
       llvm::TargetRegistry::lookupTarget(theTriple, error);
   assert(theTarget && "Failed to create Target");
@@ -545,13 +553,17 @@ void BackendAction::ExecuteAction() {
   if (!llvmModule)
     GenerateLLVMIR();
 
+  // Set the triple based on the CompilerInvocation set-up
+  const std::string &theTriple = ci.invocation().targetOpts().triple;
+  if (llvmModule->getTargetTriple() != theTriple) {
+    ci.diagnostics().Report(clang::diag::warn_fe_override_module) << theTriple;
+    llvmModule->setTargetTriple(theTriple);
+  }
+
   // Create `Target`
   std::string error;
-  const std::string &theTriple = llvmModule->getTargetTriple();
   const llvm::Target *theTarget =
       llvm::TargetRegistry::lookupTarget(theTriple, error);
-  // TODO: Make this a diagnostic once `flang-new` can consume LLVM IR files
-  // (in which users could use unsupported triples)
   assert(theTarget && "Failed to create Target");
 
   // Create `TargetMachine`
@@ -646,4 +658,18 @@ void DebugDumpPFTAction::ExecuteAction() {
   unsigned DiagID = ci.diagnostics().getCustomDiagID(
       clang::DiagnosticsEngine::Error, "Pre FIR Tree is NULL.");
   ci.diagnostics().Report(DiagID);
+}
+
+Fortran::parser::Parsing &PluginParseTreeAction::getParsing() {
+  return instance().parsing();
+}
+
+std::unique_ptr<llvm::raw_pwrite_stream>
+PluginParseTreeAction::createOutputFile(llvm::StringRef extension = "") {
+
+  std::unique_ptr<llvm::raw_pwrite_stream> OS{
+      instance().CreateDefaultOutputFile(
+          /*Binary=*/false, /*InFile=*/GetCurrentFileOrBufferName(),
+          extension)};
+  return OS;
 }
