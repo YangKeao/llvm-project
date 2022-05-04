@@ -32,16 +32,15 @@ onlySimpleRegions("only-simple-regions",
 
 namespace llvm {
 
-std::string DOTGraphTraits<RegionNode*>::getNodeLabel(RegionNode *Node, RegionNode *Graph) {
+std::string DOTGraphTraits<RegionNode *>::getNodeLabel(RegionNode *Node,
+                                                       RegionNode *Graph) {
   if (!Node->isSubRegion()) {
     BasicBlock *BB = Node->getNodeAs<BasicBlock>();
 
     if (isSimple())
-      return DOTGraphTraits<DOTFuncInfo *>
-        ::getSimpleNodeLabel(BB, nullptr);
+      return DOTGraphTraits<DOTFuncInfo *>::getSimpleNodeLabel(BB, nullptr);
     else
-      return DOTGraphTraits<DOTFuncInfo *>
-        ::getCompleteNodeLabel(BB, nullptr);
+      return DOTGraphTraits<DOTFuncInfo *>::getCompleteNodeLabel(BB, nullptr);
   }
 
   return "Not implemented";
@@ -127,7 +126,7 @@ struct DOTGraphTraits<RegionInfo *> : public DOTGraphTraits<RegionNode *> {
     printRegionCluster(*G->getTopLevelRegion(), GW, 4);
   }
 };
-} //end namespace llvm
+} // end namespace llvm
 
 namespace {
 
