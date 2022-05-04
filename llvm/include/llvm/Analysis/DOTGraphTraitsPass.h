@@ -33,7 +33,8 @@ void viewGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                           bool IsSimple) {
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
 
-  ViewGraph(Graph, Name, IsSimple, GraphName + " for '" + F.getName() + "' function");
+  ViewGraph(Graph, Name, IsSimple,
+            GraphName + " for '" + F.getName() + "' function");
 }
 
 template <typename AnalysisT, bool IsSimple,
@@ -74,16 +75,17 @@ private:
 template <typename GraphT>
 void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
                            bool IsSimple) {
-  Twine Filename = Name + "." + F.getName() + ".dot";
+  std::string Filename = Name.str() + "." + F.getName().str() + ".dot";
   std::error_code EC;
 
   errs() << "Writing '" << Filename << "'...";
 
-  raw_fd_ostream File(Filename.str(), EC, sys::fs::OF_TextWithCRLF);
+  raw_fd_ostream File(Filename, EC, sys::fs::OF_TextWithCRLF);
   std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
 
   if (!EC)
-    WriteGraph(File, Graph, IsSimple, GraphName + " for '" + F.getName() + "' function");
+    WriteGraph(File, Graph, IsSimple,
+               GraphName + " for '" + F.getName() + "' function");
   else
     errs() << "  error opening file for writing!";
   errs() << "\n";
