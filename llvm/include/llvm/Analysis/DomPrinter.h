@@ -1,4 +1,4 @@
-//===-- DomPrinterWrapperPass.h - Dom printer external interface ------------*- C++ -*-===//
+//===-- DomPrinterWrapperPass.h - Dom printer external interface -*-C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -14,18 +14,17 @@
 #ifndef LLVM_ANALYSIS_DOMPRINTER_H
 #define LLVM_ANALYSIS_DOMPRINTER_H
 
-#include "llvm/IR/PassManager.h"
-#include "llvm/IR/Dominators.h"
 #include "llvm/Analysis/DOTGraphTraitsPass.h"
 #include "llvm/Analysis/PostDominators.h"
+#include "llvm/IR/Dominators.h"
+#include "llvm/IR/PassManager.h"
 
 namespace llvm {
 
-template<>
-struct DOTGraphTraits<const DomTreeNode*> : public DefaultDOTGraphTraits {
+template <>
+struct DOTGraphTraits<const DomTreeNode *> : public DefaultDOTGraphTraits {
 
-  DOTGraphTraits (bool isSimple=false)
-    : DefaultDOTGraphTraits(isSimple) {}
+  DOTGraphTraits(bool isSimple = false) : DefaultDOTGraphTraits(isSimple) {}
 
   std::string getNodeLabel(const DomTreeNode *Node, const DomTreeNode *Graph) {
 
@@ -34,76 +33,89 @@ struct DOTGraphTraits<const DomTreeNode*> : public DefaultDOTGraphTraits {
     if (!BB)
       return "Post dominance root node";
 
-
     if (isSimple())
-      return DOTGraphTraits<DOTFuncInfo *>
-        ::getSimpleNodeLabel(BB, nullptr);
+      return DOTGraphTraits<DOTFuncInfo *>::getSimpleNodeLabel(BB, nullptr);
     else
-      return DOTGraphTraits<DOTFuncInfo *>
-        ::getCompleteNodeLabel(BB, nullptr);
+      return DOTGraphTraits<DOTFuncInfo *>::getCompleteNodeLabel(BB, nullptr);
   }
 };
 
-template<>
-struct DOTGraphTraits<DominatorTree> : public DOTGraphTraits<const DomTreeNode*> {
+template <>
+struct DOTGraphTraits<DominatorTree>
+    : public DOTGraphTraits<const DomTreeNode *> {
 
-  DOTGraphTraits (bool isSimple=false)
-    : DOTGraphTraits<const DomTreeNode*>(isSimple) {}
+  DOTGraphTraits(bool isSimple = false)
+      : DOTGraphTraits<const DomTreeNode *>(isSimple) {}
 
   static std::string getGraphName(const DominatorTree &DT) {
     return "Dominator tree";
   }
 
   std::string getNodeLabel(const DomTreeNode *Node, const DominatorTree &G) {
-    return DOTGraphTraits<const DomTreeNode*>::getNodeLabel(Node, G.getRootNode());
+    return DOTGraphTraits<const DomTreeNode *>::getNodeLabel(Node,
+                                                             G.getRootNode());
   }
 };
 
-template<>
+template <>
 struct DOTGraphTraits<PostDominatorTree>
-  : public DOTGraphTraits<const DomTreeNode*> {
+    : public DOTGraphTraits<const DomTreeNode *> {
 
-  DOTGraphTraits (bool isSimple=false)
-    : DOTGraphTraits<const DomTreeNode*>(isSimple) {}
+  DOTGraphTraits(bool isSimple = false)
+      : DOTGraphTraits<const DomTreeNode *>(isSimple) {}
 
   static std::string getGraphName(const PostDominatorTree &DT) {
     return "Post dominator tree";
   }
 
-  std::string getNodeLabel(const DomTreeNode *Node, const PostDominatorTree &G ) {
-    return DOTGraphTraits<const DomTreeNode*>::getNodeLabel(Node, G.getRootNode());
+  std::string getNodeLabel(const DomTreeNode *Node,
+                           const PostDominatorTree &G) {
+    return DOTGraphTraits<const DomTreeNode *>::getNodeLabel(Node,
+                                                             G.getRootNode());
   }
 };
 struct DomViewer : public DOTGraphTraitsViewer<DominatorTreeAnalysis, false> {
   DomViewer() : DOTGraphTraitsViewer<DominatorTreeAnalysis, false>("dom") {}
 };
 
-struct DomOnlyViewer : public DOTGraphTraitsViewer<DominatorTreeAnalysis, true> {
-  DomOnlyViewer() : DOTGraphTraitsViewer<DominatorTreeAnalysis, true>("domonly") {}
+struct DomOnlyViewer
+    : public DOTGraphTraitsViewer<DominatorTreeAnalysis, true> {
+  DomOnlyViewer()
+      : DOTGraphTraitsViewer<DominatorTreeAnalysis, true>("domonly") {}
 };
 
-struct PostDomViewer : public DOTGraphTraitsViewer<PostDominatorTreeAnalysis, false> {
-  PostDomViewer() : DOTGraphTraitsViewer<PostDominatorTreeAnalysis, false>("postdom") {}
+struct PostDomViewer
+    : public DOTGraphTraitsViewer<PostDominatorTreeAnalysis, false> {
+  PostDomViewer()
+      : DOTGraphTraitsViewer<PostDominatorTreeAnalysis, false>("postdom") {}
 };
 
-struct PostDomOnlyViewer : public DOTGraphTraitsViewer<PostDominatorTreeAnalysis, true> {
-  PostDomOnlyViewer() : DOTGraphTraitsViewer<PostDominatorTreeAnalysis, true>("postdomonly") {}
+struct PostDomOnlyViewer
+    : public DOTGraphTraitsViewer<PostDominatorTreeAnalysis, true> {
+  PostDomOnlyViewer()
+      : DOTGraphTraitsViewer<PostDominatorTreeAnalysis, true>("postdomonly") {}
 };
 
 struct DomPrinter : public DOTGraphTraitsPrinter<DominatorTreeAnalysis, false> {
   DomPrinter() : DOTGraphTraitsPrinter<DominatorTreeAnalysis, false>("dom") {}
 };
 
-struct DomOnlyPrinter : public DOTGraphTraitsPrinter<DominatorTreeAnalysis, true> {
-  DomOnlyPrinter() : DOTGraphTraitsPrinter<DominatorTreeAnalysis, true>("domonly") {}
+struct DomOnlyPrinter
+    : public DOTGraphTraitsPrinter<DominatorTreeAnalysis, true> {
+  DomOnlyPrinter()
+      : DOTGraphTraitsPrinter<DominatorTreeAnalysis, true>("domonly") {}
 };
 
-struct PostDomPrinter : public DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, false> {
-  PostDomPrinter() : DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, false>("postdom") {}
+struct PostDomPrinter
+    : public DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, false> {
+  PostDomPrinter()
+      : DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, false>("postdom") {}
 };
 
-struct PostDomOnlyPrinter : public DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, true> {
-  PostDomOnlyPrinter() : DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, true>("postdomonly") {}
+struct PostDomOnlyPrinter
+    : public DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, true> {
+  PostDomOnlyPrinter()
+      : DOTGraphTraitsPrinter<PostDominatorTreeAnalysis, true>("postdomonly") {}
 };
 } // namespace llvm
 

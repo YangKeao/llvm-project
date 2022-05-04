@@ -113,8 +113,8 @@ template <> struct GraphTraits<PostDominatorTree*>
   }
 };
 
-template <> struct GraphTraits<PostDominatorTree>
-  : public GraphTraits<DomTreeNode*> {
+template <>
+struct GraphTraits<PostDominatorTree> : public GraphTraits<DomTreeNode *> {
   static NodeRef getEntryNode(const PostDominatorTree &DT) {
     return DT.getRootNode();
   }

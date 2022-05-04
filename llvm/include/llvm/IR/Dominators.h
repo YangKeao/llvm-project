@@ -263,9 +263,11 @@ template <> struct GraphTraits<DominatorTree*>
   }
 };
 
-template <> struct GraphTraits<DominatorTree>
-  : public GraphTraits<DomTreeNode*> {
-  static NodeRef getEntryNode(const DominatorTree &DT) { return DT.getRootNode(); }
+template <>
+struct GraphTraits<DominatorTree> : public GraphTraits<DomTreeNode *> {
+  static NodeRef getEntryNode(const DominatorTree &DT) {
+    return DT.getRootNode();
+  }
 
   static nodes_iterator nodes_begin(const DominatorTree &N) {
     return df_begin(getEntryNode(N));
