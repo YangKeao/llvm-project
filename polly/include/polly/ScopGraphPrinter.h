@@ -59,8 +59,8 @@ struct DOTGraphTraits<ScopDetection *> : public DOTGraphTraits<RegionNode *> {
 
   static std::string escapeString(llvm::StringRef String);
 
-  // Print the cluster of the subregions. This groups the single basic blocks
-  // and adds a different background color for each group.
+  /// Print the cluster of the subregions. This groups the single basic blocks
+  /// and adds a different background color for each group.
   static void printRegionCluster(ScopDetection *SD, const Region *R,
                                  raw_ostream &O, unsigned depth = 0);
 
