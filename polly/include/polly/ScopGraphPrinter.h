@@ -30,44 +30,42 @@ using namespace llvm;
 namespace llvm {
 
 template <>
-struct GraphTraits<ScopDetection> : public GraphTraits<RegionInfo *> {
-  static NodeRef getEntryNode(const ScopDetection &SD) {
-    return GraphTraits<RegionInfo *>::getEntryNode(SD.getRI());
+struct GraphTraits<ScopDetection *> : public GraphTraits<RegionInfo *> {
+  static NodeRef getEntryNode(ScopDetection *SD) {
+    return GraphTraits<RegionInfo *>::getEntryNode(SD->getRI());
   }
-  static nodes_iterator nodes_begin(const ScopDetection &SD) {
+  static nodes_iterator nodes_begin(ScopDetection *SD) {
     return nodes_iterator::begin(getEntryNode(SD));
   }
-  static nodes_iterator nodes_end(const ScopDetection &SD) {
+  static nodes_iterator nodes_end(ScopDetection *SD) {
     return nodes_iterator::end(getEntryNode(SD));
   }
 };
 
 template <>
-struct DOTGraphTraits<ScopDetection> : public DOTGraphTraits<RegionNode *> {
+struct DOTGraphTraits<ScopDetection *> : public DOTGraphTraits<RegionNode *> {
   DOTGraphTraits(bool isSimple = false)
       : DOTGraphTraits<RegionNode *>(isSimple) {}
-  static std::string getGraphName(const ScopDetection &SD) {
-    return "Scop Graph";
-  }
+  static std::string getGraphName(ScopDetection *SD) { return "Scop Graph"; }
 
   std::string getEdgeAttributes(RegionNode *srcNode,
                                 GraphTraits<RegionInfo *>::ChildIteratorType CI,
-                                const ScopDetection &SD);
+                                ScopDetection *SD);
 
-  std::string getNodeLabel(RegionNode *Node, const ScopDetection &SD) {
+  std::string getNodeLabel(RegionNode *Node, ScopDetection *SD) {
     return DOTGraphTraits<RegionNode *>::getNodeLabel(
-        Node, reinterpret_cast<RegionNode *>(SD.getRI()->getTopLevelRegion()));
+        Node, reinterpret_cast<RegionNode *>(SD->getRI()->getTopLevelRegion()));
   }
 
-  static std::string escapeString(std::string String);
+  static std::string escapeString(llvm::StringRef String);
 
   // Print the cluster of the subregions. This groups the single basic blocks
   // and adds a different background color for each group.
-  static void printRegionCluster(const ScopDetection &SD, const Region *R,
+  static void printRegionCluster(ScopDetection *SD, const Region *R,
                                  raw_ostream &O, unsigned depth = 0);
 
-  static void addCustomGraphFeatures(const ScopDetection &SD,
-                                     GraphWriter<ScopDetection> &GW);
+  static void addCustomGraphFeatures(ScopDetection *SD,
+                                     GraphWriter<ScopDetection *> &GW);
 };
 } // end namespace llvm
 

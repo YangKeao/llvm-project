@@ -31,9 +31,9 @@ static cl::opt<bool> ViewAll("polly-view-all",
 
 namespace llvm {
 
-std::string DOTGraphTraits<ScopDetection>::getEdgeAttributes(
+std::string DOTGraphTraits<ScopDetection *>::getEdgeAttributes(
     RegionNode *srcNode, GraphTraits<RegionInfo *>::ChildIteratorType CI,
-    const ScopDetection &SD) {
+    ScopDetection *SD) {
   RegionNode *destNode = *CI;
 
   if (srcNode->isSubRegion() || destNode->isSubRegion())
@@ -43,7 +43,7 @@ std::string DOTGraphTraits<ScopDetection>::getEdgeAttributes(
   BasicBlock *srcBB = srcNode->getNodeAs<BasicBlock>();
   BasicBlock *destBB = destNode->getNodeAs<BasicBlock>();
 
-  RegionInfo *RI = SD.getRI();
+  RegionInfo *RI = SD->getRI();
   Region *R = RI->getRegionFor(destBB);
 
   while (R && R->getParent())
@@ -58,7 +58,8 @@ std::string DOTGraphTraits<ScopDetection>::getEdgeAttributes(
   return "";
 }
 
-std::string DOTGraphTraits<ScopDetection>::escapeString(std::string String) {
+std::string
+DOTGraphTraits<ScopDetection *>::escapeString(llvm::StringRef String) {
   std::string Escaped;
 
   for (const auto &C : String) {
@@ -70,10 +71,10 @@ std::string DOTGraphTraits<ScopDetection>::escapeString(std::string String) {
   return Escaped;
 }
 
-void DOTGraphTraits<ScopDetection>::printRegionCluster(const ScopDetection &SD,
-                                                       const Region *R,
-                                                       raw_ostream &O,
-                                                       unsigned depth) {
+void DOTGraphTraits<ScopDetection *>::printRegionCluster(ScopDetection *SD,
+                                                         const Region *R,
+                                                         raw_ostream &O,
+                                                         unsigned depth) {
   O.indent(2 * depth) << "subgraph cluster_" << static_cast<const void *>(R)
                       << " {\n";
   unsigned LineBegin, LineEnd;
@@ -87,12 +88,12 @@ void DOTGraphTraits<ScopDetection>::printRegionCluster(const ScopDetection &SD,
                             std::to_string(LineEnd) + "\n");
   }
 
-  std::string ErrorMessage = SD.regionIsInvalidBecause(R);
+  std::string ErrorMessage = SD->regionIsInvalidBecause(R);
   ErrorMessage = escapeString(ErrorMessage);
   O.indent(2 * (depth + 1))
       << "label = \"" << Location << ErrorMessage << "\";\n";
 
-  if (const_cast<ScopDetection &>(SD).isMaxRegionInScop(*R)) {
+  if (SD->isMaxRegionInScop(*R)) {
     O.indent(2 * (depth + 1)) << "style = filled;\n";
 
     // Set color to green.
@@ -124,29 +125,29 @@ void DOTGraphTraits<ScopDetection>::printRegionCluster(const ScopDetection &SD,
   O.indent(2 * depth) << "}\n";
 }
 
-void DOTGraphTraits<ScopDetection>::addCustomGraphFeatures(
-    const ScopDetection &SD, GraphWriter<ScopDetection> &GW) {
+void DOTGraphTraits<ScopDetection *>::addCustomGraphFeatures(
+    ScopDetection *SD, GraphWriter<ScopDetection *> &GW) {
   raw_ostream &O = GW.getOStream();
   O << "\tcolorscheme = \"paired12\"\n";
-  printRegionCluster(SD, SD.getRI()->getTopLevelRegion(), O, 4);
+  printRegionCluster(SD, SD->getRI()->getTopLevelRegion(), O, 4);
 }
 
 } // namespace llvm
 
 struct ScopDetectionAnalysisGraphTraits {
-  static ScopDetection &getGraph(ScopDetectionWrapperPass *Analysis) {
-    return Analysis->getSD();
+  static ScopDetection *getGraph(ScopDetectionWrapperPass *Analysis) {
+    return &Analysis->getSD();
   }
 };
 
 struct ScopViewerWrapperPass
     : public DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false,
-                                             ScopDetection &,
+                                             ScopDetection *,
                                              ScopDetectionAnalysisGraphTraits> {
   static char ID;
   ScopViewerWrapperPass()
       : DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false,
-                                        ScopDetection &,
+                                        ScopDetection *,
                                         ScopDetectionAnalysisGraphTraits>(
             "scops", ID) {}
   bool processFunction(Function &F, ScopDetectionWrapperPass &SD) override {
@@ -164,12 +165,12 @@ char ScopViewerWrapperPass::ID = 0;
 
 struct ScopOnlyViewerWrapperPass
     : public DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false,
-                                             ScopDetection &,
+                                             ScopDetection *,
                                              ScopDetectionAnalysisGraphTraits> {
   static char ID;
   ScopOnlyViewerWrapperPass()
       : DOTGraphTraitsViewerWrapperPass<ScopDetectionWrapperPass, false,
-                                        ScopDetection &,
+                                        ScopDetection *,
                                         ScopDetectionAnalysisGraphTraits>(
             "scopsonly", ID) {}
 };
@@ -177,12 +178,12 @@ char ScopOnlyViewerWrapperPass::ID = 0;
 
 struct ScopPrinterWrapperPass
     : public DOTGraphTraitsPrinterWrapperPass<
-          ScopDetectionWrapperPass, false, ScopDetection &,
+          ScopDetectionWrapperPass, false, ScopDetection *,
           ScopDetectionAnalysisGraphTraits> {
   static char ID;
   ScopPrinterWrapperPass()
       : DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, false,
-                                         ScopDetection &,
+                                         ScopDetection *,
                                          ScopDetectionAnalysisGraphTraits>(
             "scops", ID) {}
 };
@@ -190,12 +191,12 @@ char ScopPrinterWrapperPass::ID = 0;
 
 struct ScopOnlyPrinterWrapperPass
     : public DOTGraphTraitsPrinterWrapperPass<
-          ScopDetectionWrapperPass, true, ScopDetection &,
+          ScopDetectionWrapperPass, true, ScopDetection *,
           ScopDetectionAnalysisGraphTraits> {
   static char ID;
   ScopOnlyPrinterWrapperPass()
       : DOTGraphTraitsPrinterWrapperPass<ScopDetectionWrapperPass, true,
-                                         ScopDetection &,
+                                         ScopDetection *,
                                          ScopDetectionAnalysisGraphTraits>(
             "scopsonly", ID) {}
 };
