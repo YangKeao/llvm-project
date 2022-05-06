@@ -21,26 +21,25 @@ namespace llvm {
 
 /// Default traits class for extracting a graph from an analysis pass.
 ///
-/// This assumes that 'GraphT' is 'AnalysisT::Result *', and get it through
-/// FunctionAnalysisManager.
-template <typename Result, typename GraphT = Result &>
+/// This assumes that 'GraphT' is 'AnalysisT::Result *', and pass it through
+template <typename Result, typename GraphT = Result *>
 struct DefaultAnalysisGraphTraits {
-  static GraphT getGraph(Result &R) { return R; }
+  static GraphT getGraph(Result R) { return &R; }
 };
 
 template <typename GraphT>
-void viewGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
+void viewGraphForFunction(Function &F, GraphT Graph, StringRef Name,
                           bool IsSimple) {
-  std::string GraphName = DOTGraphTraits<GraphT>::getGraphName(Graph);
+  std::string GraphName = DOTGraphTraits<GraphT *>::getGraphName(&Graph);
 
   ViewGraph(Graph, Name, IsSimple,
             GraphName + " for '" + F.getName() + "' function");
 }
 
 template <typename AnalysisT, bool IsSimple,
-          typename GraphT = typename AnalysisT::Result &,
+          typename GraphT = typename AnalysisT::Result *,
           typename AnalysisGraphTraitsT =
-              DefaultAnalysisGraphTraits<typename AnalysisT::Result, GraphT>>
+              DefaultAnalysisGraphTraits<typename AnalysisT::Result &, GraphT>>
 struct DOTGraphTraitsViewer
     : public PassInfoMixin<DOTGraphTraitsViewer<AnalysisT, IsSimple, GraphT,
                                                 AnalysisGraphTraitsT>> {
@@ -73,7 +72,7 @@ private:
 };
 
 template <typename GraphT>
-void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
+void printGraphForFunction(Function &F, GraphT Graph, StringRef Name,
                            bool IsSimple) {
   std::string Filename = Name.str() + "." + F.getName().str() + ".dot";
   std::error_code EC;
@@ -92,9 +91,9 @@ void printGraphForFunction(Function &F, GraphT &Graph, StringRef Name,
 }
 
 template <typename AnalysisT, bool IsSimple,
-          typename GraphT = typename AnalysisT::Result &,
+          typename GraphT = typename AnalysisT::Result *,
           typename AnalysisGraphTraitsT =
-              DefaultAnalysisGraphTraits<typename AnalysisT::Result, GraphT>>
+              DefaultAnalysisGraphTraits<typename AnalysisT::Result &, GraphT>>
 struct DOTGraphTraitsPrinter
     : public PassInfoMixin<DOTGraphTraitsPrinter<AnalysisT, IsSimple, GraphT,
                                                  AnalysisGraphTraitsT>> {
