@@ -24,42 +24,6 @@
 
 using namespace llvm;
 
-namespace llvm {
-
-template <>
-struct DOTGraphTraits<DominatorTree *>
-    : public DOTGraphTraits<const DomTreeNode *> {
-
-  DOTGraphTraits(bool isSimple = false)
-      : DOTGraphTraits<const DomTreeNode *>(isSimple) {}
-
-  static std::string getGraphName(const DominatorTree *DT) {
-    return "Dominator tree";
-  }
-
-  std::string getNodeLabel(const DomTreeNode *Node, const DominatorTree *G) {
-    return DOTGraphTraits<const DomTreeNode *>::getNodeLabel(Node,
-                                                             G->getRootNode());
-  }
-};
-
-template<>
-struct DOTGraphTraits<PostDominatorTree*>
-  : public DOTGraphTraits<DomTreeNode*> {
-
-  DOTGraphTraits (bool isSimple=false)
-    : DOTGraphTraits<DomTreeNode*>(isSimple) {}
-
-  static std::string getGraphName(const PostDominatorTree *DT) {
-    return "Post dominator tree";
-  }
-
-  std::string getNodeLabel(const DomTreeNode *Node,
-                           const PostDominatorTree *G) {
-    return DOTGraphTraits<DomTreeNode*>::getNodeLabel(Node, G->getRootNode());
-  }
-};
-} // namespace llvm
 
 void DominatorTree::viewGraph(const Twine &Name, const Twine &Title) {
 #ifndef NDEBUG
