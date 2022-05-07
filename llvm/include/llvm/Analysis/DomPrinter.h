@@ -35,8 +35,8 @@ struct DOTGraphTraits<DomTreeNode *> : public DefaultDOTGraphTraits {
 
     if (isSimple())
       return DOTGraphTraits<DOTFuncInfo *>::getSimpleNodeLabel(BB, nullptr);
-    else
-      return DOTGraphTraits<DOTFuncInfo *>::getCompleteNodeLabel(BB, nullptr);
+
+    return DOTGraphTraits<DOTFuncInfo *>::getCompleteNodeLabel(BB, nullptr);
   }
 };
 
