@@ -34,13 +34,13 @@ using namespace polly;
 
 namespace {
 
-class MaximalStaticExpander : public ScopPass {
+class MaximalStaticExpanderWrapperPass : public ScopPass {
 public:
   static char ID;
 
-  explicit MaximalStaticExpander() : ScopPass(ID) {}
+  explicit MaximalStaticExpanderWrapperPass() : ScopPass(ID) {}
 
-  ~MaximalStaticExpander() override = default;
+  ~MaximalStaticExpanderWrapperPass() override = default;
 
   /// Expand the accesses of the SCoP.
   ///
@@ -128,9 +128,9 @@ static bool isDimBoundedByConstant(isl::set Set, unsigned dim) {
 }
 #endif
 
-char MaximalStaticExpander::ID = 0;
+char MaximalStaticExpanderWrapperPass::ID = 0;
 
-isl::union_map MaximalStaticExpander::filterDependences(
+isl::union_map MaximalStaticExpanderWrapperPass::filterDependences(
     Scop &S, const isl::union_map &Dependences, MemoryAccess *MA) {
   auto SAI = MA->getLatestScopArrayInfo();
 
@@ -168,7 +168,7 @@ isl::union_map MaximalStaticExpander::filterDependences(
   return MapDependences;
 }
 
-bool MaximalStaticExpander::isExpandable(
+bool MaximalStaticExpanderWrapperPass::isExpandable(
     const ScopArrayInfo *SAI, SmallPtrSetImpl<MemoryAccess *> &Writes,
     SmallPtrSetImpl<MemoryAccess *> &Reads, Scop &S,
     const isl::union_map &Dependences) {
@@ -312,7 +312,7 @@ bool MaximalStaticExpander::isExpandable(
   return true;
 }
 
-void MaximalStaticExpander::mapAccess(Scop &S,
+void MaximalStaticExpanderWrapperPass::mapAccess(Scop &S,
                                       SmallPtrSetImpl<MemoryAccess *> &Accesses,
                                       const isl::union_map &Dependences,
                                       ScopArrayInfo *ExpandedSAI,
@@ -347,7 +347,7 @@ void MaximalStaticExpander::mapAccess(Scop &S,
   }
 }
 
-ScopArrayInfo *MaximalStaticExpander::expandAccess(Scop &S, MemoryAccess *MA) {
+ScopArrayInfo *MaximalStaticExpanderWrapperPass::expandAccess(Scop &S, MemoryAccess *MA) {
   // Get the current AM.
   auto CurrentAccessMap = MA->getAccessRelation();
 
@@ -416,7 +416,7 @@ ScopArrayInfo *MaximalStaticExpander::expandAccess(Scop &S, MemoryAccess *MA) {
   return ExpandedSAI;
 }
 
-void MaximalStaticExpander::expandPhi(Scop &S, const ScopArrayInfo *SAI,
+void MaximalStaticExpanderWrapperPass::expandPhi(Scop &S, const ScopArrayInfo *SAI,
                                       const isl::union_map &Dependences) {
   SmallPtrSet<MemoryAccess *, 4> Writes;
   for (auto MA : S.getPHIIncomings(SAI))
@@ -427,12 +427,12 @@ void MaximalStaticExpander::expandPhi(Scop &S, const ScopArrayInfo *SAI,
   mapAccess(S, Writes, Dependences, ExpandedSAI, false);
 }
 
-void MaximalStaticExpander::emitRemark(StringRef Msg, Instruction *Inst) {
+void MaximalStaticExpanderWrapperPass::emitRemark(StringRef Msg, Instruction *Inst) {
   ORE->emit(OptimizationRemarkAnalysis(DEBUG_TYPE, "ExpansionRejection", Inst)
             << Msg);
 }
 
-bool MaximalStaticExpander::runOnScop(Scop &S) {
+bool MaximalStaticExpanderWrapperPass::runOnScop(Scop &S) {
   // Get the ORE from OptimizationRemarkEmitterWrapperPass.
   ORE = &(getAnalysis<OptimizationRemarkEmitterWrapperPass>().getORE());
 
@@ -465,23 +465,23 @@ bool MaximalStaticExpander::runOnScop(Scop &S) {
   return false;
 }
 
-void MaximalStaticExpander::printScop(raw_ostream &OS, Scop &S) const {
+void MaximalStaticExpanderWrapperPass::printScop(raw_ostream &OS, Scop &S) const {
   S.print(OS, false);
 }
 
-void MaximalStaticExpander::getAnalysisUsage(AnalysisUsage &AU) const {
+void MaximalStaticExpanderWrapperPass::getAnalysisUsage(AnalysisUsage &AU) const {
   ScopPass::getAnalysisUsage(AU);
   AU.addRequired<DependenceInfo>();
   AU.addRequired<OptimizationRemarkEmitterWrapperPass>();
 }
 
 Pass *polly::createMaximalStaticExpansionPass() {
-  return new MaximalStaticExpander();
+  return new MaximalStaticExpanderWrapperPass();
 }
 
-INITIALIZE_PASS_BEGIN(MaximalStaticExpander, "polly-mse",
+INITIALIZE_PASS_BEGIN(MaximalStaticExpanderWrapperPass, "polly-mse",
                       "Polly - Maximal static expansion of SCoP", false, false);
 INITIALIZE_PASS_DEPENDENCY(DependenceInfo);
 INITIALIZE_PASS_DEPENDENCY(OptimizationRemarkEmitterWrapperPass);
-INITIALIZE_PASS_END(MaximalStaticExpander, "polly-mse",
+INITIALIZE_PASS_END(MaximalStaticExpanderWrapperPass, "polly-mse",
                     "Polly - Maximal static expansion of SCoP", false, false)

@@ -264,7 +264,7 @@ void initializePollyPasses(llvm::PassRegistry &Registry) {
   initializeJSONExporterPass(Registry);
   initializeJSONImporterPass(Registry);
   initializeJSONImporterPrinterLegacyPassPass(Registry);
-  initializeMaximalStaticExpanderPass(Registry);
+  initializeMaximalStaticExpanderWrapperPassPass(Registry);
   initializeIslAstInfoWrapperPassPass(Registry);
   initializeIslAstInfoPrinterLegacyPassPass(Registry);
   initializeIslScheduleOptimizerWrapperPassPass(Registry);
