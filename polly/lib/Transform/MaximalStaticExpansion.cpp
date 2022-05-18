@@ -61,6 +61,50 @@ class MaximalStaticExpansionImpl {
              << Msg);
   }
 
+
+  /// Filter the dependences to have only one related to current memory access.
+  ///
+  /// @param S The SCop in which the memory access appears in.
+  /// @param MapDependences The dependences to filter.
+  /// @param MA The memory access that need to be expanded.
+  isl::union_map filterDependences(const isl::union_map &Dependences,
+                                   MemoryAccess *MA) {
+    auto SAI = MA->getLatestScopArrayInfo();
+
+    auto AccessDomainSet = MA->getAccessRelation().domain();
+    auto AccessDomainId = AccessDomainSet.get_tuple_id();
+
+    isl::union_map MapDependences = isl::union_map::empty(S.getIslCtx());
+
+    for (isl::map Map : Dependences.get_map_list()) {
+      // Filter out Statement to Statement dependences.
+      if (!Map.can_curry())
+        continue;
+
+      // Intersect with the relevant SAI.
+      auto TmpMapDomainId =
+          Map.get_space().domain().unwrap().range().get_tuple_id(isl::dim::set);
+
+      ScopArrayInfo *UserSAI =
+          static_cast<ScopArrayInfo *>(TmpMapDomainId.get_user());
+
+      if (SAI != UserSAI)
+        continue;
+
+      // Get the correct S1[] -> S2[] dependence.
+      auto NewMap = Map.factor_domain();
+      auto NewMapDomainId = NewMap.domain().get_tuple_id();
+
+      if (AccessDomainId.get() != NewMapDomainId.get())
+        continue;
+
+      // Add the corresponding map to MapDependences.
+      MapDependences = MapDependences.unite(NewMap);
+    }
+
+    return MapDependences;
+  }
+
   /// Return true if the SAI in parameter is expandable.
   ///
   /// @param SAI the SAI that need to be checked.
@@ -211,6 +255,48 @@ class MaximalStaticExpansionImpl {
     return true;
   }
 
+  /// Expand the MemoryAccess according to Dependences and already expanded
+  /// MemoryAccesses.
+  ///
+  /// @param The SCop in which the memory access appears in.
+  /// @param The memory access that need to be expanded.
+  /// @param Dependences The RAW dependences of the SCop.
+  /// @param ExpandedSAI The expanded SAI created during write expansion.
+  /// @param Reverse if true, the Dependences union_map is reversed before
+  /// intersection.
+  void mapAccess(SmallPtrSetImpl<MemoryAccess *> &Accesses,
+                 const isl::union_map &Dependences, ScopArrayInfo *ExpandedSAI,
+                 bool Reverse) {
+    for (auto MA : Accesses) {
+      // Get the current AM.
+      auto CurrentAccessMap = MA->getAccessRelation();
+
+      // Get RAW dependences for the current WA.
+      auto DomainSet = MA->getAccessRelation().domain();
+      auto Domain = isl::union_set(DomainSet);
+
+      // Get the dependences relevant for this MA.
+      isl::union_map MapDependences =
+          filterDependences(Reverse ? Dependences.reverse() : Dependences, MA);
+
+      // If no dependences, no need to modify anything.
+      if (MapDependences.is_empty())
+        return;
+
+      assert(isl_union_map_n_map(MapDependences.get()) == 1 &&
+             "There are more than one RAW dependencies in the union map.");
+      auto NewAccessMap = isl::map::from_union_map(MapDependences);
+
+      auto Id = ExpandedSAI->getBasePtrId();
+
+      // Replace the out tuple id with the one of the access array.
+      NewAccessMap = NewAccessMap.set_tuple_id(isl::dim::out, Id);
+
+      // Set the new access relation.
+      MA->setNewAccessRelation(NewAccessMap);
+    }
+  }
+
   /// Expand the MemoryAccess according to its domain.
   ///
   /// @param S The SCop in which the memory access appears in.
@@ -282,91 +368,6 @@ class MaximalStaticExpansionImpl {
     MA->setNewAccessRelation(NewAccessMap);
 
     return ExpandedSAI;
-  }
-
-  /// Filter the dependences to have only one related to current memory access.
-  ///
-  /// @param S The SCop in which the memory access appears in.
-  /// @param MapDependences The dependences to filter.
-  /// @param MA The memory access that need to be expanded.
-  isl::union_map filterDependences(const isl::union_map &Dependences,
-                                   MemoryAccess *MA) {
-    auto SAI = MA->getLatestScopArrayInfo();
-
-    auto AccessDomainSet = MA->getAccessRelation().domain();
-    auto AccessDomainId = AccessDomainSet.get_tuple_id();
-
-    isl::union_map MapDependences = isl::union_map::empty(S.getIslCtx());
-
-    for (isl::map Map : Dependences.get_map_list()) {
-      // Filter out Statement to Statement dependences.
-      if (!Map.can_curry())
-        continue;
-
-      // Intersect with the relevant SAI.
-      auto TmpMapDomainId =
-          Map.get_space().domain().unwrap().range().get_tuple_id(isl::dim::set);
-
-      ScopArrayInfo *UserSAI =
-          static_cast<ScopArrayInfo *>(TmpMapDomainId.get_user());
-
-      if (SAI != UserSAI)
-        continue;
-
-      // Get the correct S1[] -> S2[] dependence.
-      auto NewMap = Map.factor_domain();
-      auto NewMapDomainId = NewMap.domain().get_tuple_id();
-
-      if (AccessDomainId.get() != NewMapDomainId.get())
-        continue;
-
-      // Add the corresponding map to MapDependences.
-      MapDependences = MapDependences.unite(NewMap);
-    }
-
-    return MapDependences;
-  }
-
-  /// Expand the MemoryAccess according to Dependences and already expanded
-  /// MemoryAccesses.
-  ///
-  /// @param The SCop in which the memory access appears in.
-  /// @param The memory access that need to be expanded.
-  /// @param Dependences The RAW dependences of the SCop.
-  /// @param ExpandedSAI The expanded SAI created during write expansion.
-  /// @param Reverse if true, the Dependences union_map is reversed before
-  /// intersection.
-  void mapAccess(SmallPtrSetImpl<MemoryAccess *> &Accesses,
-                 const isl::union_map &Dependences, ScopArrayInfo *ExpandedSAI,
-                 bool Reverse) {
-    for (auto MA : Accesses) {
-      // Get the current AM.
-      auto CurrentAccessMap = MA->getAccessRelation();
-
-      // Get RAW dependences for the current WA.
-      auto DomainSet = MA->getAccessRelation().domain();
-      auto Domain = isl::union_set(DomainSet);
-
-      // Get the dependences relevant for this MA.
-      isl::union_map MapDependences =
-          filterDependences(Reverse ? Dependences.reverse() : Dependences, MA);
-
-      // If no dependences, no need to modify anything.
-      if (MapDependences.is_empty())
-        return;
-
-      assert(isl_union_map_n_map(MapDependences.get()) == 1 &&
-             "There are more than one RAW dependencies in the union map.");
-      auto NewAccessMap = isl::map::from_union_map(MapDependences);
-
-      auto Id = ExpandedSAI->getBasePtrId();
-
-      // Replace the out tuple id with the one of the access array.
-      NewAccessMap = NewAccessMap.set_tuple_id(isl::dim::out, Id);
-
-      // Set the new access relation.
-      MA->setNewAccessRelation(NewAccessMap);
-    }
   }
 
   /// Expand PHI memory accesses.
