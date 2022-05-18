@@ -35,6 +35,30 @@ using namespace polly;
 
 namespace {
 
+class MaximalStaticExpanderWrapperPass final : public ScopPass {
+public:
+  static char ID;
+
+  explicit MaximalStaticExpanderWrapperPass() : ScopPass(ID) {}
+
+  ~MaximalStaticExpanderWrapperPass() override = default;
+
+  /// Expand the accesses of the SCoP.
+  ///
+  /// @param S The SCoP that must be expanded.
+  bool runOnScop(Scop &S) override;
+
+  /// Print the SCoP.
+  ///
+  /// @param OS The stream where to print.
+  /// @param S The SCop that must be printed.
+  void printScop(raw_ostream &OS, Scop &S) const override;
+
+  /// Register all analyses and transformations required.
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
+};
+
+
 #ifndef NDEBUG
 /// Whether a dimension of a set is bounded (lower and upper) by a constant,
 /// i.e. there are two constants Min and Max, such that every value x of the
@@ -489,29 +513,6 @@ MaximalStaticExpansionPrinterPass::run(Scop &S, ScopAnalysisManager &SAM,
                                        SPMUpdater &) {
   return runMSEUsingNPM(S, SAM, SAR, &OS);
 }
-
-class MaximalStaticExpanderWrapperPass : public ScopPass {
-public:
-  static char ID;
-
-  explicit MaximalStaticExpanderWrapperPass() : ScopPass(ID) {}
-
-  ~MaximalStaticExpanderWrapperPass() override = default;
-
-  /// Expand the accesses of the SCoP.
-  ///
-  /// @param S The SCoP that must be expanded.
-  bool runOnScop(Scop &S) override;
-
-  /// Print the SCoP.
-  ///
-  /// @param OS The stream where to print.
-  /// @param S The SCop that must be printed.
-  void printScop(raw_ostream &OS, Scop &S) const override;
-
-  /// Register all analyses and transformations required.
-  void getAnalysisUsage(AnalysisUsage &AU) const override;
-};
 
 char MaximalStaticExpanderWrapperPass::ID = 0;
 
