@@ -417,7 +417,23 @@ public:
   }
 
   /// Dump the internal information about a performed MSE to @p OS.
-  void print(llvm::raw_ostream &OS) { S.print(OS, false); }
+  void print(llvm::raw_ostream &OS) {
+    OS << "After arrays {\n";
+
+    for (auto &Array : S.arrays())
+      Array->print(OS);
+
+    OS << "}\n";
+
+    OS << "After accesses {\n";
+    for (auto &Stmt : S) {
+      OS.indent(4) << Stmt.getBaseName() << "{\n";
+      for (auto *MA : Stmt)
+        MA->print(OS);
+      OS.indent(4) << "}\n";
+    }
+    OS << "}\n";
+  }
 };
 
 static std::unique_ptr<MaximalStaticExpansionImpl>
